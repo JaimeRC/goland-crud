@@ -1,4 +1,4 @@
-naries for programs and plugins
+# Binaries for programs and plugins
 *.exe
 *.exe~
 *.dll
@@ -8,14 +8,10 @@ naries for programs and plugins
 # Test binary, built with `go test -c`
 *.test
 
-/.idenaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
 
-# Test binary, built with `go test -c`
-*.test
+# Dependency directories (remove the comment below to include it)
+# vendor/
 
 /.idea
