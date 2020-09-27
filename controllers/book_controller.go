@@ -1,19 +1,44 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"go-rollercoaster-api/models"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"log"
 	"math/rand"
 	"net/http"
 	"strconv"
+	"time"
 )
 
-// Init books var as a slice Book struct
-var books []models.Book
+// DATABASE INSTANCE
+var collection *mongo.Collection
+
+func BookCollection(c *mongo.Database) {
+	collection = c.Collection("books")
+}
 
 // Get all books
 func GetBooks(w http.ResponseWriter, r *http.Request) {
+	books := []models.Book{}
+	cursor, err := collection.Find(context.TODO(), bson.M{})
+
+	if err != nil {
+		log.Printf("Error while getting all books, Reason: %v\n", err)
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	// Iterate through the returned cursor.
+	for cursor.Next(context.TODO()) {
+		var book models.Book
+		cursor.Decode(&book)
+		books = append(books, book)
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(books)
 }
@@ -22,14 +47,15 @@ func GetBooks(w http.ResponseWriter, r *http.Request) {
 func GetBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r) // Gets params
-	// Loop through books and find one with the id from the params
-	for _, item := range books {
-		if item.ID == params["id"] {
-			json.NewEncoder(w).Encode(item)
-			return
-		}
+
+	book := models.Book{}
+	err := collection.FindOne(context.TODO(), bson.M{"isdn": params["isdn"]}).Decode(&book)
+	if err != nil {
+		log.Printf("Error while getting a single todo, Reason: %v\n", err)
+		http.Error(w, err.Error(), 500)
+		return
 	}
-	json.NewEncoder(w).Encode(&models.Book{})
+	json.NewEncoder(w).Encode(book)
 }
 
 // Add new book
@@ -37,8 +63,15 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var book models.Book
 	_ = json.NewDecoder(r.Body).Decode(&book)
-	book.ID = strconv.Itoa(rand.Intn(100000000)) // Mock ID - not safe
-	books = append(books, book)
+	book.Isbn = strconv.Itoa(rand.Intn(100000000)) // Mock ID - not safe
+
+	_, err := collection.InsertOne(context.TODO(), book)
+
+	if err != nil {
+		log.Printf("Error while inserting new book into db, Reason: %v\n", err)
+		http.Error(w, err.Error(), 500)
+		return
+	}
 	json.NewEncoder(w).Encode(book)
 }
 
@@ -46,29 +79,40 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
 func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
-	for index, item := range books {
-		if item.ID == params["id"] {
-			books = append(books[:index], books[index+1:]...) // Remove book
-			var book models.Book
-			_ = json.NewDecoder(r.Body).Decode(&book)
-			book.ID = params["id"]
-			books = append(books, book) // Add book updat
-			json.NewEncoder(w).Encode(book)
-			return
-		}
+
+	var updateBook models.Book
+
+	_ = json.NewDecoder(r.Body).Decode(&updateBook)
+
+	newData := bson.M{
+		"$set": bson.M{
+			"title":       updateBook.Title,
+			"author": 		updateBook.Author,
+			"updatedAt":	time.Now(),
+		},
 	}
+
+	_, err := collection.UpdateOne(context.TODO(), bson.M{"isbn": params["isbn"]}, newData)
+	if err != nil {
+		log.Printf("Error, Reason: %v\n", err)
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	json.NewEncoder(w).Encode(updateBook)
+
 }
 
 // Delete book
 func DeleteBook(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
-	for index, item := range books {
-		if item.ID == params["id"] {
-			books = append(books[:index], books[index+1:]...) // Remove book
-			break
-		}
+
+	_, err := collection.DeleteOne(context.TODO(), bson.M{"isbn": params["isbn"]})
+	if err != nil {
+		log.Printf("Error while deleting a single todo, Reason: %v\n", err)
+		http.Error(w, err.Error(), 500)
+		return
 	}
-	json.NewEncoder(w).Encode(books)
+
+	GetBooks(w,r)
 }
 
