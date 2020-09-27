@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gorilla/mux"
+	"go-rollercoaster-api/database"
 	"go-rollercoaster-api/routes"
 	"log"
 	"net/http"
@@ -10,6 +11,10 @@ import (
 
 // Main function
 func main() {
+
+	// Database
+	database.Connect("localhost")
+
 	// Init router
 	r := mux.NewRouter()
 
