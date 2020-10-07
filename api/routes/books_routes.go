@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/gorilla/mux"
-	"go-rollercoaster-api/controllers"
+	"api/controllers"
 )
 
 // SetContactsRoutes agrega las rutas de contactos

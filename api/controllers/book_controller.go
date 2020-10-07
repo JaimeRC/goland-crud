@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"go-rollercoaster-api/models"
+	"api/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"

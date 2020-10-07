@@ -3,7 +3,7 @@ package routes
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"go-rollercoaster-api/models"
+	"api/models"
 	"net/http"
 )
 

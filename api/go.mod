@@ -1,4 +1,4 @@
-module go-rollercoaster-api
+module api
 
 go 1.14
 

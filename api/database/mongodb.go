@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
-	"go-rollercoaster-api/controllers"
+	"api/controllers"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -13,22 +13,30 @@ import (
 
 
 func Connect(host string) {
-	// Database Config
-	clientOptions := options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:port",host))
-	client, err := mongo.NewClient(clientOptions)
 
+	// Database Config
+	clientOptions := options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%d", "mongodb", 27018))
+
+
+
+
+
+
+	
 	//Set up a context required by mongo.Connect
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	err = client.Connect(ctx)
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	//To close the connection at the end
-	defer cancel()
+	//defer cancel()
 
 	err = client.Ping(context.Background(), readpref.Primary())
 	if err != nil {
-		log.Fatal("Couldn't connect to the database", err)
+		fmt.Println("Couldn't connect to the database", err)
 	} else {
-		log.Println("Connected!")
+		fmt.Println("Connected to MongoDB!")
 	}
 
 	db := client.Database("apiBook")

@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/gorilla/mux"
-	"go-rollercoaster-api/database"
-	"go-rollercoaster-api/routes"
+	"api/database"
+	"api/routes"
 	"log"
 	"net/http"
 )
@@ -13,7 +13,7 @@ import (
 func main() {
 
 	// Database
-	database.Connect("localhost")
+	database.Connect("mongo")
 
 	// Init router
 	r := mux.NewRouter()
